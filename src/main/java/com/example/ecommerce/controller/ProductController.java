@@ -11,6 +11,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -26,19 +28,19 @@ public class ProductController {
             @RequestParam(required = false) String category
     ) {
 
-        // ✅ Allowed sort fields
-        if (!sortBy.equals("id") && !sortBy.equals("price") && !sortBy.equals("name")) {
+        // ✅ Runtime-safe validation (Swagger-safe)
+        if (sortBy != null && !List.of("id", "price", "name").contains(sortBy)) {
             throw new IllegalArgumentException("Invalid sort field: " + sortBy);
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
 
-        if (category != null) {
+        if (category != null && !category.isBlank()) {
             return service.getProductsByCategory(category, pageable);
         }
+
         return service.getAllProducts(pageable);
     }
-
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
